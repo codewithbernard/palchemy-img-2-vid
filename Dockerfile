@@ -69,8 +69,7 @@ RUN if [ "$ENABLE_PYTORCH_UPGRADE" = "true" ]; then \
     fi
 
 RUN uv pip install "triton==${TRITON_VERSION}" \
-    && cd /tmp \
-    && wget "${SAGE_WHEEL_URL}" \
+    && wget -O /tmp/sageattention-2.2.0-cp311-cp311-linux_x86_64.whl "${SAGE_WHEEL_URL}" \
     && uv pip install /tmp/sageattention-2.2.0-cp311-cp311-linux_x86_64.whl \
     && rm -f /tmp/sageattention-2.2.0-cp311-cp311-linux_x86_64.whl
 
