@@ -80,7 +80,7 @@ WORKDIR /
 
 RUN uv pip install runpod requests websocket-client
 
-ADD src/start.sh src/network_volume.py handler.py test_input.json ./
+ADD src/start.sh src/network_volume.py handler.py ./
 RUN chmod +x /start.sh
 
 COPY scripts/comfy-node-install.sh /usr/local/bin/comfy-node-install
@@ -106,8 +106,6 @@ RUN comfy model download --url https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_
 
 RUN comfy model download --url https://huggingface.co/Kijai/WanVideo_comfy/blob/main/LoRAs/Wan22-Lightning/old/Wan2.2-Lightning_I2V-A14B-4steps-lora_HIGH_fp16.safetensors --relative-path models/loras --filename Wan2.2-Lightning_I2V-A14B-4steps-lora_HIGH_fp16.safetensors
 RUN comfy model download --url https://huggingface.co/Kijai/WanVideo_comfy/blob/main/LoRAs/Wan22-Lightning/old/Wan2.2-Lightning_I2V-A14B-4steps-lora_LOW_fp16.safetensors --relative-path models/loras --filename Wan2.2-Lightning_I2V-A14B-4steps-lora_LOW_fp16.safetensors
-
-
 
 # Need to add the custom nodes
 RUN comfy-node-install comfyui-kjnodes ComfyUI-WanVideoWrapper comfyui-custom-scripts comfyui-frame-interpolation comfyui-easy-use
