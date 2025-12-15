@@ -11,9 +11,6 @@ ARG SAGE_WHEEL_URL="https://huggingface.co/datasets/BernardBuilds/sage-wheel/res
 # Build arguments for this stage with sensible defaults for standalone builds
 ARG COMFYUI_VERSION=latest
 
-# Recommended defaults for CUDA 12.8 builds
-ARG CUDA_VERSION_FOR_COMFY=12.8
-
 ARG ENABLE_PYTORCH_UPGRADE=true
 ARG PYTORCH_INDEX_URL=https://download.pytorch.org/whl/cu128
 
