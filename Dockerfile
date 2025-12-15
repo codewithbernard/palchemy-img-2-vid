@@ -5,13 +5,16 @@ ARG BASE_IMAGE=nvidia/cuda:12.8.1-cudnn-runtime-ubuntu24.04
 # Stage 1: Base image with common dependencies
 FROM ${BASE_IMAGE} AS base
 
+ARG TRITON_VERSION=3.5.1
+ARG SAGE_WHEEL_URL="https://huggingface.co/datasets/BernardBuilds/sage-wheel/resolve/main/sageattention-2.2.0-cp311-cp311-linux_x86_64.whl?download=true"
+
 # Build arguments for this stage with sensible defaults for standalone builds
 ARG COMFYUI_VERSION=latest
 
 # Recommended defaults for CUDA 12.8 builds
 ARG CUDA_VERSION_FOR_COMFY=12.8
-ARG ENABLE_PYTORCH_UPGRADE=false
-# PyTorch CUDA 12.8 wheel index (cu128)
+
+ARG ENABLE_PYTORCH_UPGRADE=true
 ARG PYTORCH_INDEX_URL=https://download.pytorch.org/whl/cu128
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -21,8 +24,13 @@ ENV CMAKE_BUILD_PARALLEL_LEVEL=8
 
 # Install Python, git and other necessary tools
 RUN apt-get update && apt-get install -y \
-    python3.12 \
-    python3.12-venv \
+    software-properties-common \
+    ca-certificates \
+    gnupg \
+    && add-apt-repository ppa:deadsnakes/ppa \
+    && apt-get update && apt-get install -y \
+    python3.11 \
+    python3.11-venv \
     python3-pip \
     git \
     wget \
@@ -32,7 +40,8 @@ RUN apt-get update && apt-get install -y \
     libxext6 \
     libxrender1 \
     ffmpeg \
-    && ln -sf /usr/bin/python3.12 /usr/bin/python \
+    && ln -sf /usr/bin/python3.11 /usr/bin/python \
+    && ln -sf /usr/bin/python3.11 /usr/bin/python3 \
     && ln -sf /usr/bin/pip3 /usr/bin/pip
 
 RUN apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
@@ -41,7 +50,7 @@ RUN apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 RUN wget -qO- https://astral.sh/uv/install.sh | sh \
     && ln -s /root/.local/bin/uv /usr/local/bin/uv \
     && ln -s /root/.local/bin/uvx /usr/local/bin/uvx \
-    && uv venv /opt/venv
+    && uv venv --python /usr/bin/python3.11 /opt/venv
 
 ENV PATH="/opt/venv/bin:${PATH}"
 
@@ -57,8 +66,15 @@ RUN if [ -n "${CUDA_VERSION_FOR_COMFY}" ]; then \
 
 # Upgrade PyTorch if needed (for newer CUDA versions)
 RUN if [ "$ENABLE_PYTORCH_UPGRADE" = "true" ]; then \
-      uv pip install --force-reinstall torch torchvision torchaudio --index-url ${PYTORCH_INDEX_URL}; \
+      uv pip install --force-reinstall \
+        torch==2.9.0 torchvision==0.24.0 torchaudio==2.9.0 \
+        --index-url ${PYTORCH_INDEX_URL}; \
     fi
+
+RUN uv pip install "triton==${TRITON_VERSION}" \
+    && wget -O /tmp/sageattention.whl "${SAGE_WHEEL_URL}" \
+    && uv pip install /tmp/sageattention.whl \
+    && rm -f /tmp/sageattention.whl
 
 WORKDIR /comfyui
 ADD src/extra_model_paths.yaml ./
